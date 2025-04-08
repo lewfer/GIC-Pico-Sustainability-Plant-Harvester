@@ -20,43 +20,25 @@ pins[3].direction = digitalio.Direction.OUTPUT
 
 #one hot encoding vectors
 full_step_sequence = [
-    [1,0,0,0],
-    [0,1,0,0],
-    [0,0,1,0],
-    [0,0,0,1]
-]
-
-smooth_full_step_sequence = [
-    [1,0,0,1],
-    [1,0,0,0],
-    [0,1,0,0],
+    [1,1,0,0],
     [0,1,1,0],
-    [0,0,1,0],
     [0,0,1,1],
-    [0,0,0,1]
+    [1,0,0,1]
 ]
 
-numSteps = 100
+numSteps = 300          # higher means more distance travelled
+rpm = 12 				# rpm - set to 1 to 15
+stepsperrot = 2048      # steps per rotation - don't change (
+
 for i in range(numSteps):
     for step in full_step_sequence:
         for i in range(len(pins)):
             pins[i].value = step[i]
-            time.sleep(0.001)
-    
+        #time.sleep(0.002)
+        time.sleep(60 / (rpm * stepsperrot))
+
 for i in range(numSteps):
     for step in reversed(full_step_sequence):
         for i in range(len(pins)):
             pins[i].value = step[i]
-            time.sleep(0.001)
-            
-for i in range(numSteps):
-    for step in smooth_full_step_sequence:
-        for i in range(len(pins)):
-            pins[i].value = step[i]
-            time.sleep(0.001)
-
-for i in range(numSteps):
-    for step in reversed(smooth_full_step_sequence):
-        for i in range(len(pins)):
-            pins[i].value = step[i]
-            time.sleep(0.001)
+        time.sleep(60 / (rpm * stepsperrot))

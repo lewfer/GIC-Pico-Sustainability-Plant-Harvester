@@ -30,6 +30,9 @@ servo1 = servo.Servo(
 servo1.angle = 90
 
 # Stepper
+STEPPER_RPM = 6 				# rpm - set to 1 to 15
+STEPPER_STEPS_PER_ROT = 2048    # steps per rotation - don't change (
+
 stepperPins = [
     digitalio.DigitalInOut(PIN_STEPPER_1),
     digitalio.DigitalInOut(PIN_STEPPER_2),
@@ -49,18 +52,9 @@ full_step_sequence = [
     [0,0,0,1]
 ]
 
-smooth_full_step_sequence = [
-    [1,0,0,1],
-    [1,0,0,0],
-    [0,1,0,0],
-    [0,1,1,0],
-    [0,0,1,0],
-    [0,0,1,1],
-    [0,0,0,1]
-]
-
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
+BLUE = (0, 0, 255)
 
 # Set initial fruit colours
 pixels[0] = GREEN
@@ -104,6 +98,17 @@ tick = 0
 chopTick = 0
 chopCount = 3
 
+# API
+
+# Set brighness 0 to 1
+def setBrightness(amount):
+    pixels.brightness = amount
+
+def setColour(pixel, colour):
+    pixels[pixel] = colour
+
+
+    
 # Fruit ripeness will go from 0 to 255, which is the ripening phase (green to red)
 # then from 255 to 512, which is the rotting phase  (red to blue)
 def grow():
@@ -122,12 +127,14 @@ def grow():
     else:
         pixels.brightness = 1
         print("Growing", end="")
+        if light>LIGHT_THRESHOLD:
+            print(" and ripening", end="")
         for i in range(3):
             
             # If enough light
             if light>LIGHT_THRESHOLD:
-                if (i==0):
-                    print(" and ripening", end="")
+                # Compute new ripeness level
+                
                 # If already fully ripe, start rotting
                 if fruitRipeness[i]>=255:
                     fruitRipeness[i] += int(random.randint(0,9)/1) # rot slowly
@@ -138,9 +145,11 @@ def grow():
             
             # Show colour according to fruit state
             if fruitRipeness[i]<256:
-                pixels[i] = (fruitRipeness[i], 255-fruitRipeness[i], 0) # more red, less green
+                # Ripening
+                pixels[i] = (fruitRipeness[i], 255-fruitRipeness[i], 0) # more red, less green as fruitRipeness increases
             elif fruitRipeness[i]<512:
-                pixels[i] = (255-(fruitRipeness[i]-255), 0, fruitRipeness[i]-256) # less red, more green
+                # Rotting
+                pixels[i] = (255-(fruitRipeness[i]-255), 0, fruitRipeness[i]-256) # less red, more blue as fruitRipeness increases
         print("")
                 
     tick += 1
@@ -150,20 +159,24 @@ def grow():
     #print("Ripeness:",fruitRipeness)
         
     
+def setSpeed(speed):
+    global STEPPER_RPM
+    STEPPER_RPM = speed
+    
     
 def forward(numSteps):
     for i in range(numSteps):
         for step in reversed(full_step_sequence):
             for i in range(len(stepperPins)):
                 stepperPins[i].value = step[i]
-                time.sleep(0.001)
+            time.sleep(60 / (STEPPER_RPM * STEPPER_STEPS_PER_ROT))
                 
 def backward(numSteps):
     for i in range(numSteps):
         for step in full_step_sequence:
             for i in range(len(stepperPins)):
                 stepperPins[i].value = step[i]
-                time.sleep(0.001)
+            time.sleep(60 / (STEPPER_RPM * STEPPER_STEPS_PER_ROT))
 
 def moveFullBack():
     while backSwitch.value:
@@ -198,14 +211,20 @@ def setLightThreshold(t):
     global LIGHT_THRESHOLD
     LIGHT_THRESHOLD = t
     
-def colour(i, colour):
-    pixels[i] = colour
-    
-def chop(count=1):
+
+def chopForward(count=1):
     global chopTick
     global chopCount
     
     servo1.angle = 20
+    chopTick = tick
+    chopCount = count
+
+def chopBackward(count=1):
+    global chopTick
+    global chopCount
+    
+    servo1.angle = 160
     chopTick = tick
     chopCount = count
     
