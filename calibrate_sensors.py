@@ -3,7 +3,7 @@
 # Import libraries we need
 import board
 import time
-from harvestlib import *
+from harvest_lib import *
 
 
 # Loop forever
