@@ -6,6 +6,8 @@ In this workshop, "digital plants" are grown, using light and moisture sensors t
 
 Uses a Raspberry Pi Pico, running CircuitPython.  This repo is the CircuitPython code.
 
+Current version for CircuitPython 9.2.9
+
 ### pico
 Starter code for the Raspberry Pi Pico
 
